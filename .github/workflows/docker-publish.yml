@@ -6,11 +6,17 @@ on:
     paths:
       - "Dockerfile"
       - ".github/workflows/docker-publish.yml"
+  # Daily rebuild to pick up distribution security updates. Scheduled runs
+  # only ever fire from the default branch.
+  schedule:
+    - cron: "17 4 * * *"
   workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # Never kill a scheduled rebuild that is already running; a cancelled
+  # security rebuild would silently leave the published image stale.
+  cancel-in-progress: ${{ github.event_name != 'schedule' }}
 
 env:
   REGISTRY: ghcr.io
@@ -64,6 +70,13 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          # Always re-resolve ubuntu:latest rather than trusting a local copy.
+          pull: true
+          # The whole point of the nightly run is to re-run apt-get. With the
+          # layer cache warm and the Dockerfile unchanged, a cached build would
+          # reproduce the previous image exactly and ship no security updates,
+          # so scheduled runs build from scratch.
+          no-cache: ${{ github.event_name == 'schedule' }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -83,10 +96,10 @@ jobs:
           delete-only-untagged-versions: true
           min-versions-to-keep: 0
 
-      # Keep the current image plus two rollback targets.
+      # At one build per day this is roughly a week of rollback targets.
       - name: Prune old versions
         uses: actions/delete-package-versions@v5
         with:
           package-name: ${{ github.event.repository.name }}
           package-type: container
-          min-versions-to-keep: 3
+          min-versions-to-keep: 7
