@@ -21,7 +21,7 @@ RUN curl -fsSL -o idea.tar.gz https://download.jetbrains.com/idea/idea-2026.1.4.
 
 # install sdkman & java
 RUN curl -s "https://get.sdkman.io" | bash \
-    && bash -lc "source ${SDKMAN_DIR}/bin/sdkman-init.sh && sdk install java 25.0.1-tem && sdk default java 25.0.1-tem" \
+    && bash -lc "source ${SDKMAN_DIR}/bin/sdkman-init.sh && sdk install java 25.0.4-tem && sdk default java 25.0.4-tem" \
     && chmod -R a+rX "${SDKMAN_DIR}"
 
 # Fixed account name; the password is set at container start, see /start.sh
