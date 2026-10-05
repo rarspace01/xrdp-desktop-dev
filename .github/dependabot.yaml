@@ -1,0 +1,12 @@
+# .github/dependabot.yml
+version: 2
+updates:
+  # Enable version updates for Docker
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "daily" # Options: daily, weekly, monthly
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "docker"
